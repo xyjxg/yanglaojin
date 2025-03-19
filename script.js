@@ -28,16 +28,19 @@ function addStock(stockCode, quantity) {
 }
 
 function fetchStockPrice(stockCode) {
-    // Replace with a real API call to get stock price
-    // For demonstration, we'll use a mock price
-    const mockPrices = {
-        'AAPL': 150.00,
-        'GOOGL': 2800.00,
-        'TSLA': 700.00,
-        'AMZN': 3400.00
-    };
+    const apiKey = 'YOUR_API_KEY'; // 替换为你的Alpha Vantage API Key
+    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${stockCode}&apikey=${apiKey}`;
 
-    return Promise.resolve(mockPrices[stockCode] || 0);
+    return fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const price = parseFloat(data['Global Quote']['05. price']);
+            return price || 0; // 如果获取不到价格，返回0
+        })
+        .catch(error => {
+            console.error('获取股票价格失败：', error);
+            return 0;
+        });
 }
 
 function updateTotalValue() {
