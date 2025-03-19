@@ -11,7 +11,7 @@ body {
 
 /* 总市值显示样式 */
 .total-value-display {
-    font-size: 140px;
+    font-size: 100px;
     font-weight: bold;
     color: #000000;
     padding: 40px;
