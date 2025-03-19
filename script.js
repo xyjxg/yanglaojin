@@ -28,14 +28,13 @@ function addStock(stockCode, quantity) {
 }
 
 function fetchStockPrice(stockCode) {
-    const apiKey = 'YOUR_API_KEY'; // 替换为你的Alpha Vantage API Key
-    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${stockCode}&apikey=${apiKey}`;
+    const url = `http://qt.gtimg.cn/q=${stockCode}`;
 
     return fetch(url)
-        .then(response => response.json())
+        .then(response => response.text())
         .then(data => {
-            const price = parseFloat(data['Global Quote']['05. price']);
-            return price || 0; // 如果获取不到价格，返回0
+            const price = parseFloat(data.split('~')[3]);
+            return price || 0;
         })
         .catch(error => {
             console.error('获取股票价格失败：', error);
