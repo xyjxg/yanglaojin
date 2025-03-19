@@ -1,20 +1,25 @@
-// 导出持仓数据（加密）
+// 导出持仓数据（仅保留股票代码和股数）
 function exportPortfolio() {
     const portfolio = JSON.parse(localStorage.getItem('portfolio')) || [];
-    const exportData = JSON.stringify(portfolio);
-    const encodedData = encodeURIComponent(exportData); // 先对字符串进行编码
-    const encryptedData = btoa(encodedData); // 再进行 Base64 编码
-    prompt('请复制以下代码以导出持仓数据：', encryptedData);
+    const simplifiedData = portfolio.map(stock => [stock.code, stock.quantity]); // 只保留代码和股数
+    const exportData = JSON.stringify(simplifiedData);
+    const encodedData = btoa(encodeURIComponent(exportData)); // 编码
+    prompt('请复制以下代码以导出持仓数据：', encodedData);
 }
 
-// 导入持仓数据（解密）
+// 导入持仓数据（恢复股票代码和股数）
 function importPortfolio() {
-    const encryptedData = prompt('请粘贴导出的持仓数据代码：');
-    if (encryptedData) {
+    const encodedData = prompt('请粘贴导出的持仓数据代码：');
+    if (encodedData) {
         try {
-            const encodedData = atob(encryptedData); // 先进行 Base64 解码
-            const exportData = decodeURIComponent(encodedData); // 再对字符串解码
-            const portfolio = JSON.parse(exportData);
+            const exportData = decodeURIComponent(atob(encodedData)); // 解码
+            const simplifiedData = JSON.parse(exportData);
+            const portfolio = simplifiedData.map(stock => ({
+                code: stock[0],
+                quantity: stock[1],
+                price: 0, // 价格初始为 0，后续通过 API 获取
+                name: '' // 名称初始为空，后续通过 API 获取
+            }));
             localStorage.setItem('portfolio', JSON.stringify(portfolio));
             location.reload(); // 刷新页面以加载新数据
         } catch (error) {
@@ -183,10 +188,21 @@ function startPriceUpdates() {
     }, 10000); // 每60秒更新一次
 }
 
-// 页面加载时加载持仓数据
-window.onload = function() {
-    loadPortfolio();
-};
+// 从 localStorage 加载持仓数据
+function loadPortfolio() {
+    const portfolio = JSON.parse(localStorage.getItem('portfolio')) || [];
+    portfolio.forEach(stock => {
+        fetchStockPrice(stock.code).then(data => {
+            if (data.price !== 0) {
+                stock.price = data.price; // 更新价格
+                stock.name = data.name; // 更新名称
+                addStockToTable(stock.code, stock.quantity, stock.price, stock.name);
+                updateTotalValue();
+            }
+        });
+    });
+    startPriceUpdates(); // 启动价格更新
+}
 
 // 绑定表单提交事件
 document.getElementById('stockForm').addEventListener('submit', function(event) {
