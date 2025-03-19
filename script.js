@@ -5,6 +5,7 @@ function loadPortfolio() {
         addStockToTable(stock.code, stock.quantity, stock.price);
     });
     updateTotalValue();
+    startPriceUpdates(); // 启动价格更新
 }
 
 // 保存持仓数据到 localStorage
@@ -57,6 +58,69 @@ function addStock(stockCode, quantity) {
 
 // 获取股票价格
 function fetchStockPrice(stockCode) {
+    // 判断股票市场
+    if (/^[A-Za-z]+$/.test(stockCode)) {
+        // 美股
+        return fetchUSStockPrice(stockCode);
+    } else if (stockCode.startsWith('HK')) {
+        // 港股
+        return fetchHKStockPrice(stockCode);
+    } else {
+        // A 股
+        return fetchAStockPrice(stockCode);
+    }
+}
+
+// 获取美股价格
+function fetchUSStockPrice(stockCode) {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${stockCode}`;
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const price = data.chart.result[0].meta.regularMarketPrice;
+            return price || 0;
+        })
+        .catch(error => {
+            console.error('获取美股价格失败：', error);
+            return 0;
+        });
+}
+
+// 获取港股价格
+function fetchHKStockPrice(stockCode) {
+    const code = stockCode.substring(2); // 去掉 HK 前缀
+    const secid = `116.${code}`; // 港股市场代码为 116
+    const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43`;
+
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.data && data.data.f43) {
+                const price = data.data.f43 / 100; // 价格需要除以100
+                return price || 0;
+            } else {
+                console.error('未获取到港股价格数据');
+                return 0;
+            }
+        })
+        .catch(error => {
+            console.error('获取港股价格失败：', error);
+            return 0;
+        });
+}
+
+// 获取 A 股价格
+function fetchAStockPrice(stockCode) {
     // 去掉股票代码前缀（SH/SZ）
     if (stockCode.startsWith('SH') || stockCode.startsWith('SZ')) {
         stockCode = stockCode.substring(2);
@@ -90,12 +154,12 @@ function fetchStockPrice(stockCode) {
                 const price = data.data.f43 / 100; // 价格需要除以100
                 return price || 0;
             } else {
-                console.error('未获取到价格数据');
+                console.error('未获取到A股价格数据');
                 return 0;
             }
         })
         .catch(error => {
-            console.error('获取股票价格失败：', error);
+            console.error('获取A股价格失败：', error);
             return 0;
         });
 }
@@ -112,6 +176,25 @@ function updateTotalValue() {
 
     // 更新总市值显示
     document.getElementById('totalValueDisplay').textContent = `￥${totalValue.toFixed(2)}`;
+}
+
+// 启动价格更新
+function startPriceUpdates() {
+    setInterval(() => {
+        const rows = document.querySelectorAll('#stockTable tbody tr');
+        rows.forEach(row => {
+            const stockCode = row.cells[0].textContent;
+            fetchStockPrice(stockCode).then(price => {
+                if (price !== 0) {
+                    const quantity = parseInt(row.cells[1].textContent);
+                    const marketValue = quantity * price;
+                    row.cells[2].textContent = `￥${price.toFixed(2)}`;
+                    row.cells[3].textContent = `￥${marketValue.toFixed(2)}`;
+                }
+            });
+        });
+        updateTotalValue();
+    }, 15000); // 每60秒更新一次
 }
 
 // 页面加载时加载持仓数据
