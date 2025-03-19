@@ -1,7 +1,7 @@
 document.getElementById('stockForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    const stockCode = document.getElementById('stockCode').value.toUpperCase();
+    const stockCode = document.getElementById('stockCode').value.toLowerCase(); // 股票代码转为小写
     const quantity = parseInt(document.getElementById('quantity').value);
 
     if (stockCode && quantity) {
@@ -16,10 +16,10 @@ function addStock(stockCode, quantity) {
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${stockCode}</td>
+            <td>${stockCode.toUpperCase()}</td>
             <td>${quantity}</td>
-            <td>$${price.toFixed(2)}</td>
-            <td>$${marketValue.toFixed(2)}</td>
+            <td>￥${price.toFixed(2)}</td>
+            <td>￥${marketValue.toFixed(2)}</td>
         `;
 
         document.getElementById('stockTable').querySelector('tbody').appendChild(row);
@@ -33,7 +33,9 @@ function fetchStockPrice(stockCode) {
     return fetch(url)
         .then(response => response.text())
         .then(data => {
-            const price = parseFloat(data.split('~')[3]);
+            // 解析返回的数据
+            const fields = data.split('~');
+            const price = parseFloat(fields[3]); // 当前价格在第4个字段
             return price || 0;
         })
         .catch(error => {
@@ -47,9 +49,9 @@ function updateTotalValue() {
     let totalValue = 0;
 
     rows.forEach(row => {
-        const marketValue = parseFloat(row.cells[3].textContent.replace('$', ''));
+        const marketValue = parseFloat(row.cells[3].textContent.replace('￥', ''));
         totalValue += marketValue;
     });
 
-    document.getElementById('totalValue').textContent = `$${totalValue.toFixed(2)}`;
+    document.getElementById('totalValue').textContent = `￥${totalValue.toFixed(2)}`;
 }
