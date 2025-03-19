@@ -2,7 +2,8 @@
 function exportPortfolio() {
     const portfolio = JSON.parse(localStorage.getItem('portfolio')) || [];
     const exportData = JSON.stringify(portfolio);
-    const encryptedData = btoa(exportData); // Base64 编码
+    const encodedData = encodeURIComponent(exportData); // 先对字符串进行编码
+    const encryptedData = btoa(encodedData); // 再进行 Base64 编码
     prompt('请复制以下代码以导出持仓数据：', encryptedData);
 }
 
@@ -11,7 +12,8 @@ function importPortfolio() {
     const encryptedData = prompt('请粘贴导出的持仓数据代码：');
     if (encryptedData) {
         try {
-            const exportData = atob(encryptedData); // Base64 解码
+            const encodedData = atob(encryptedData); // 先进行 Base64 解码
+            const exportData = decodeURIComponent(encodedData); // 再对字符串解码
             const portfolio = JSON.parse(exportData);
             localStorage.setItem('portfolio', JSON.stringify(portfolio));
             location.reload(); // 刷新页面以加载新数据
