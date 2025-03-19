@@ -30,7 +30,7 @@ function addStockToTable(stockCode, quantity, price, stockName) {
     stockItem.innerHTML = `
         <div class="stock-code">${stockCode.toUpperCase()}</div>
         <div class="stock-name">${stockName}</div>
-        <div class="stock-quantity">${quantity}</div>
+        <div class="stock-quantity">${quantity}股</div>
         <div class="stock-price">￥${price.toFixed(2)}</div>
         <div class="stock-value">￥${marketValue.toFixed(2)}</div>
         <button onclick="deleteStock(this.parentElement)">删除</button>
