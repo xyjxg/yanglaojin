@@ -2,7 +2,7 @@
 function loadPortfolio() {
     const portfolio = JSON.parse(localStorage.getItem('portfolio')) || [];
     portfolio.forEach(stock => {
-        addStockToTable(stock.code, stock.quantity, stock.price);
+        addStockToTable(stock.code, stock.quantity, stock.price, stock.name);
     });
     updateTotalValue();
     startPriceUpdates(); // 启动价格更新
@@ -11,157 +11,119 @@ function loadPortfolio() {
 // 保存持仓数据到 localStorage
 function savePortfolio() {
     const portfolio = [];
-    document.querySelectorAll('#stockTable tbody tr').forEach(row => {
-        const code = row.cells[0].textContent;
-        const quantity = parseInt(row.cells[1].textContent);
-        const price = parseFloat(row.cells[2].textContent.replace('￥', ''));
-        portfolio.push({ code, quantity, price });
+    document.querySelectorAll('.stock-item').forEach(item => {
+        const code = item.querySelector('.stock-code').textContent;
+        const quantity = parseInt(item.querySelector('.stock-quantity').textContent);
+        const price = parseFloat(item.querySelector('.stock-price').textContent.replace('￥', ''));
+        const name = item.querySelector('.stock-name').textContent;
+        portfolio.push({ code, quantity, price, name });
     });
     localStorage.setItem('portfolio', JSON.stringify(portfolio));
 }
 
 // 添加股票到表格
-function addStockToTable(stockCode, quantity, price) {
+function addStockToTable(stockCode, quantity, price, stockName) {
     const marketValue = quantity * price;
 
-    const row = document.createElement('tr');
-    row.innerHTML = `
-        <td>${stockCode.toUpperCase()}</td>
-        <td>${quantity}</td>
-        <td>￥${price.toFixed(2)}</td>
-        <td>￥${marketValue.toFixed(2)}</td>
-        <td><button onclick="deleteStock(this.parentElement.parentElement)">删除</button></td>
+    const stockItem = document.createElement('div');
+    stockItem.className = 'stock-item';
+    stockItem.innerHTML = `
+        <div class="stock-code">${stockCode.toUpperCase()}</div>
+        <div class="stock-name">${stockName}</div>
+        <div class="stock-quantity">${quantity}</div>
+        <div class="stock-price">￥${price.toFixed(2)}</div>
+        <div class="stock-value">￥${marketValue.toFixed(2)}</div>
+        <button onclick="deleteStock(this.parentElement)">删除</button>
     `;
 
-    document.getElementById('stockTable').querySelector('tbody').appendChild(row);
+    const tableBody = document.getElementById('stockTable').querySelector('tbody');
+    if (tableBody.children.length % 3 === 0) {
+        const newRow = document.createElement('tr');
+        newRow.className = 'stock-row';
+        tableBody.appendChild(newRow);
+    }
+    const lastRow = tableBody.lastElementChild;
+    lastRow.appendChild(document.createElement('td')).appendChild(stockItem);
 }
 
 // 删除股票
-function deleteStock(row) {
-    row.remove();
+function deleteStock(stockItem) {
+    stockItem.remove();
     updateTotalValue();
     savePortfolio(); // 保存持仓数据
 }
 
 // 添加股票
 function addStock(stockCode, quantity) {
-    fetchStockPrice(stockCode).then(price => {
-        if (price === 0) {
+    fetchStockPrice(stockCode).then(data => {
+        if (data.price === 0) {
             alert('股票价格获取失败，请检查股票代码是否正确');
             return;
         }
-        addStockToTable(stockCode, quantity, price);
+        addStockToTable(stockCode, quantity, data.price, data.name);
         updateTotalValue();
         savePortfolio(); // 保存持仓数据
     });
 }
 
+// 获取股票价格和名称
 function fetchStockPrice(stockCode) {
-    // 判断是否为港股代码（以 HK 开头）
+    // 判断股票市场
+    let secid;
     if (stockCode.startsWith('HK')) {
         // 港股
-        const code = stockCode.substring(2); // 去掉 HK 前缀
-        const secid = `116.${code}`; // 港股市场代码为 116
-        const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43`;
-
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('网络请求失败');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.data && data.data.f43) {
-                    const price = data.data.f43 / 100; // 价格需要除以100
-                    return price || 0;
-                } else {
-                    console.error('未获取到港股价格数据');
-                    return 0;
-                }
-            })
-            .catch(error => {
-                console.error('获取港股价格失败：', error);
-                return 0;
-            });
+        const code = stockCode.substring(2);
+        secid = `116.${code}`;
     } else if (/^[A-Za-z]+$/.test(stockCode)) {
         // 美股
-        const secid = `105.${stockCode}`; // 美股市场代码为 105
-        const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43`;
-
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('网络请求失败');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.data && data.data.f43) {
-                    const price = data.data.f43 / 100; // 价格需要除以100
-                    return price || 0;
-                } else {
-                    console.error('未获取到美股价格数据');
-                    return 0;
-                }
-            })
-            .catch(error => {
-                console.error('获取美股价格失败：', error);
-                return 0;
-            });
+        secid = `105.${stockCode}`;
     } else {
         // A 股
-        // 去掉股票代码前缀（SH/SZ）
         if (stockCode.startsWith('SH') || stockCode.startsWith('SZ')) {
             stockCode = stockCode.substring(2);
         }
-
-        // 解析股票代码
-        let market, code;
         if (stockCode.startsWith('6')) {
-            market = '1'; // 上海交易所
-            code = stockCode;
+            secid = `1.${stockCode}`; // 上海交易所
         } else if (stockCode.startsWith('0') || stockCode.startsWith('3')) {
-            market = '0'; // 深圳交易所
-            code = stockCode;
+            secid = `0.${stockCode}`; // 深圳交易所
         } else {
             alert('不支持的股票代码格式');
-            return Promise.resolve(0);
+            return Promise.resolve({ price: 0, name: '' });
         }
-
-        const secid = `${market}.${code}`; // 格式化为东方财富的secid
-        const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43`;
-
-        return fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('网络请求失败');
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.data && data.data.f43) {
-                    const price = data.data.f43 / 100; // 价格需要除以100
-                    return price || 0;
-                } else {
-                    console.error('未获取到A股价格数据');
-                    return 0;
-                }
-            })
-            .catch(error => {
-                console.error('获取A股价格失败：', error);
-                return 0;
-            });
     }
+
+    const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43,f58`;
+
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.data && data.data.f43) {
+                const price = data.data.f43 / 100; // 价格需要除以100
+                const name = data.data.f58; // 股票名称
+                return { price, name };
+            } else {
+                console.error('未获取到价格数据');
+                return { price: 0, name: '' };
+            }
+        })
+        .catch(error => {
+            console.error('获取股票价格失败：', error);
+            return { price: 0, name: '' };
+        });
 }
 
 // 更新总市值
 function updateTotalValue() {
-    const rows = document.querySelectorAll('#stockTable tbody tr');
+    const stockItems = document.querySelectorAll('.stock-item');
     let totalValue = 0;
 
-    rows.forEach(row => {
-        const marketValue = parseFloat(row.cells[3].textContent.replace('￥', ''));
+    stockItems.forEach(item => {
+        const marketValue = parseFloat(item.querySelector('.stock-value').textContent.replace('￥', ''));
         totalValue += marketValue;
     });
 
@@ -172,20 +134,20 @@ function updateTotalValue() {
 // 启动价格更新
 function startPriceUpdates() {
     setInterval(() => {
-        const rows = document.querySelectorAll('#stockTable tbody tr');
-        rows.forEach(row => {
-            const stockCode = row.cells[0].textContent;
-            fetchStockPrice(stockCode).then(price => {
-                if (price !== 0) {
-                    const quantity = parseInt(row.cells[1].textContent);
-                    const marketValue = quantity * price;
-                    row.cells[2].textContent = `￥${price.toFixed(2)}`;
-                    row.cells[3].textContent = `￥${marketValue.toFixed(2)}`;
+        const stockItems = document.querySelectorAll('.stock-item');
+        stockItems.forEach(item => {
+            const stockCode = item.querySelector('.stock-code').textContent;
+            fetchStockPrice(stockCode).then(data => {
+                if (data.price !== 0) {
+                    const quantity = parseInt(item.querySelector('.stock-quantity').textContent);
+                    const marketValue = quantity * data.price;
+                    item.querySelector('.stock-price').textContent = `￥${data.price.toFixed(2)}`;
+                    item.querySelector('.stock-value').textContent = `￥${marketValue.toFixed(2)}`;
                 }
             });
         });
         updateTotalValue();
-    }, 10000); // 每60秒更新一次
+    }, 10000); // 每10秒更新一次
 }
 
 // 页面加载时加载持仓数据
