@@ -73,7 +73,7 @@ function fetchStockPrice(stockCode) {
     if (stockCode.startsWith('HK')) {
         // 港股
         const code = stockCode.substring(2);
-        secid = `116.0${code}`;
+        secid = `116.${code}`;
     } else if (/^[A-Za-z]+$/.test(stockCode)) {
         // 美股
         secid = `105.${stockCode}`;
