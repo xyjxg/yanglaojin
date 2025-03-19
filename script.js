@@ -1,3 +1,26 @@
+// 导出持仓数据（加密）
+function exportPortfolio() {
+    const portfolio = JSON.parse(localStorage.getItem('portfolio')) || [];
+    const exportData = JSON.stringify(portfolio);
+    const encryptedData = btoa(exportData); // Base64 编码
+    prompt('请复制以下代码以导出持仓数据：', encryptedData);
+}
+
+// 导入持仓数据（解密）
+function importPortfolio() {
+    const encryptedData = prompt('请粘贴导出的持仓数据代码：');
+    if (encryptedData) {
+        try {
+            const exportData = atob(encryptedData); // Base64 解码
+            const portfolio = JSON.parse(exportData);
+            localStorage.setItem('portfolio', JSON.stringify(portfolio));
+            location.reload(); // 刷新页面以加载新数据
+        } catch (error) {
+            alert('导入失败，请检查数据格式是否正确');
+        }
+    }
+}
+
 // 导出持仓数据
 function exportPortfolio() {
     const portfolio = JSON.parse(localStorage.getItem('portfolio')) || [];
