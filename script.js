@@ -60,3 +60,26 @@ function updateTotalValue() {
 window.onload = function() {
     loadPortfolio();
 };
+
+// 删除股票
+function deleteStock(row) {
+    row.remove();
+    updateTotalValue();
+    savePortfolio(); // 保存持仓数据
+}
+
+// 添加股票到表格
+function addStockToTable(stockCode, quantity, price) {
+    const marketValue = quantity * price;
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${stockCode.toUpperCase()}</td>
+        <td>${quantity}</td>
+        <td>￥${price.toFixed(2)}</td>
+        <td>￥${marketValue.toFixed(2)}</td>
+        <td><button onclick="deleteStock(this.parentElement.parentElement)">删除</button></td>
+    `;
+
+    document.getElementById('stockTable').querySelector('tbody').appendChild(row);
+}
