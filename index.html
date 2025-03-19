@@ -25,6 +25,13 @@
             <button type="submit">添加股票</button>
         </form>
 
+        <!-- 操作按钮 -->
+        <div class="action-buttons">
+            <button onclick="exportPortfolio()">导出</button>
+            <button onclick="importPortfolio()">导入</button>
+            <button onclick="clearPortfolio()">清仓</button>
+        </div>
+
         <!-- 持仓股票表格 -->
         <table id="stockTable">
             <thead>
