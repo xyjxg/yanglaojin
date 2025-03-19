@@ -9,6 +9,9 @@
 <body>
     <div class="container">
         <h1>股票持仓跟踪器</h1>
+        <!-- 显示总市值 -->
+        <div id="totalValueDisplay" class="total-value-display">￥0.00</div>
+
         <form id="stockForm">
             <label for="stockCode">股票代码：</label>
             <input type="text" id="stockCode" placeholder="例如：600873" required>
@@ -33,11 +36,6 @@
                 <!-- 动态添加行 -->
             </tbody>
         </table>
-
-        <div class="total-value">
-            <strong>持仓总市值：</strong>
-            <span id="totalValue">￥0.00</span>
-        </div>
     </div>
 
     <script src="script.js"></script>
