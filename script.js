@@ -59,42 +59,28 @@ function addStock(stockCode, quantity) {
 // 获取股票价格
 function fetchStockPrice(stockCode) {
     // 判断股票市场
+    let secid;
     if (/^[A-Za-z]+$/.test(stockCode)) {
         // 美股
-        return fetchUSStockPrice(stockCode);
+        secid = `105.${stockCode}`;
     } else if (stockCode.startsWith('HK')) {
         // 港股
-        return fetchHKStockPrice(stockCode);
+        secid = `116.${stockCode.substring(2)}`;
     } else {
         // A 股
-        return fetchAStockPrice(stockCode);
+        if (stockCode.startsWith('SH') || stockCode.startsWith('SZ')) {
+            stockCode = stockCode.substring(2);
+        }
+        if (stockCode.startsWith('6')) {
+            secid = `1.${stockCode}`; // 上海交易所
+        } else if (stockCode.startsWith('0') || stockCode.startsWith('3')) {
+            secid = `0.${stockCode}`; // 深圳交易所
+        } else {
+            alert('不支持的股票代码格式');
+            return Promise.resolve(0);
+        }
     }
-}
 
-// 获取美股价格
-function fetchUSStockPrice(stockCode) {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${stockCode}`;
-    return fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('网络请求失败');
-            }
-            return response.json();
-        })
-        .then(data => {
-            const price = data.chart.result[0].meta.regularMarketPrice;
-            return price || 0;
-        })
-        .catch(error => {
-            console.error('获取美股价格失败：', error);
-            return 0;
-        });
-}
-
-// 获取港股价格
-function fetchHKStockPrice(stockCode) {
-    const code = stockCode.substring(2); // 去掉 HK 前缀
-    const secid = `116.${code}`; // 港股市场代码为 116
     const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43`;
 
     return fetch(url)
@@ -109,57 +95,12 @@ function fetchHKStockPrice(stockCode) {
                 const price = data.data.f43 / 100; // 价格需要除以100
                 return price || 0;
             } else {
-                console.error('未获取到港股价格数据');
+                console.error('未获取到价格数据');
                 return 0;
             }
         })
         .catch(error => {
-            console.error('获取港股价格失败：', error);
-            return 0;
-        });
-}
-
-// 获取 A 股价格
-function fetchAStockPrice(stockCode) {
-    // 去掉股票代码前缀（SH/SZ）
-    if (stockCode.startsWith('SH') || stockCode.startsWith('SZ')) {
-        stockCode = stockCode.substring(2);
-    }
-
-    // 解析股票代码
-    let market, code;
-    if (stockCode.startsWith('6')) {
-        market = '1'; // 上海交易所
-        code = stockCode;
-    } else if (stockCode.startsWith('0') || stockCode.startsWith('3')) {
-        market = '0'; // 深圳交易所
-        code = stockCode;
-    } else {
-        alert('不支持的股票代码格式');
-        return Promise.resolve(0);
-    }
-
-    const secid = `${market}.${code}`; // 格式化为东方财富的secid
-    const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43`;
-
-    return fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('网络请求失败');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.data && data.data.f43) {
-                const price = data.data.f43 / 100; // 价格需要除以100
-                return price || 0;
-            } else {
-                console.error('未获取到A股价格数据');
-                return 0;
-            }
-        })
-        .catch(error => {
-            console.error('获取A股价格失败：', error);
+            console.error('获取股票价格失败：', error);
             return 0;
         });
 }
@@ -194,7 +135,7 @@ function startPriceUpdates() {
             });
         });
         updateTotalValue();
-    }, 15000); // 每60秒更新一次
+    }, 10000); // 每60秒更新一次
 }
 
 // 页面加载时加载持仓数据
