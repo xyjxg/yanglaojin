@@ -1,3 +1,32 @@
+// 导出持仓数据
+function exportPortfolio() {
+    const portfolio = JSON.parse(localStorage.getItem('portfolio')) || [];
+    const exportData = JSON.stringify(portfolio);
+    prompt('请复制以下代码以导出持仓数据：', exportData);
+}
+
+// 导入持仓数据
+function importPortfolio() {
+    const importData = prompt('请粘贴导出的持仓数据代码：');
+    if (importData) {
+        try {
+            const portfolio = JSON.parse(importData);
+            localStorage.setItem('portfolio', JSON.stringify(portfolio));
+            location.reload(); // 刷新页面以加载新数据
+        } catch (error) {
+            alert('导入失败，请检查数据格式是否正确');
+        }
+    }
+}
+
+// 清空持仓数据
+function clearPortfolio() {
+    if (confirm('确定要清空所有持仓数据吗？')) {
+        localStorage.removeItem('portfolio');
+        location.reload(); // 刷新页面以清空数据
+    }
+}
+
 // 从 localStorage 加载持仓数据
 function loadPortfolio() {
     const portfolio = JSON.parse(localStorage.getItem('portfolio')) || [];
@@ -30,7 +59,7 @@ function addStockToTable(stockCode, quantity, price, stockName) {
     stockItem.innerHTML = `
         <div class="stock-code">${stockCode.toUpperCase()}</div>
         <div class="stock-name">${stockName}</div>
-        <div class="stock-quantity">${quantity}股</div>
+        <div class="stock-quantity">${quantity}</div>
         <div class="stock-price">￥${price.toFixed(2)}</div>
         <div class="stock-value">￥${marketValue.toFixed(2)}</div>
         <button onclick="deleteStock(this.parentElement)">删除</button>
@@ -147,7 +176,7 @@ function startPriceUpdates() {
             });
         });
         updateTotalValue();
-    }, 10000); // 每10秒更新一次
+    }, 60000); // 每60秒更新一次
 }
 
 // 页面加载时加载持仓数据
