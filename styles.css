@@ -1,69 +1,75 @@
-document.getElementById('stockForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-
-    const stockCode = document.getElementById('stockCode').value; // 用户输入的股票代码
-    const quantity = parseInt(document.getElementById('quantity').value);
-
-    if (stockCode && quantity) {
-        addStock(stockCode, quantity);
-        document.getElementById('stockForm').reset();
-    }
-});
-
-function addStock(stockCode, quantity) {
-    fetchStockPrice(stockCode).then(price => {
-        const marketValue = quantity * price;
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${stockCode.toUpperCase()}</td>
-            <td>${quantity}</td>
-            <td>￥${price.toFixed(2)}</td>
-            <td>￥${marketValue.toFixed(2)}</td>
-        `;
-
-        document.getElementById('stockTable').querySelector('tbody').appendChild(row);
-        updateTotalValue();
-    });
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
 }
 
-function fetchStockPrice(stockCode) {
-    // 解析股票代码
-    let market, code;
-    if (stockCode.startsWith('6')) {
-        market = '1'; // 上海交易所
-        code = stockCode;
-    } else if (stockCode.startsWith('0') || stockCode.startsWith('3')) {
-        market = '0'; // 深圳交易所
-        code = stockCode;
-    } else {
-        console.error('不支持的股票代码格式');
-        return Promise.resolve(0);
-    }
-
-    const secid = `${market}.${code}`; // 格式化为东方财富的secid
-    const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43`;
-
-    return fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            const price = data.data.f43 / 100; // 价格需要除以100
-            return price || 0;
-        })
-        .catch(error => {
-            console.error('获取股票价格失败：', error);
-            return 0;
-        });
+.container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 400px;
 }
 
-function updateTotalValue() {
-    const rows = document.querySelectorAll('#stockTable tbody tr');
-    let totalValue = 0;
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-    rows.forEach(row => {
-        const marketValue = parseFloat(row.cells[3].textContent.replace('￥', ''));
-        totalValue += marketValue;
-    });
+form {
+    display: flex;
+    flex-direction: column;
+}
 
-    document.getElementById('totalValue').textContent = `￥${totalValue.toFixed(2)}`;
+label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input {
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    padding: 10px;
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background-color: #f8f9fa;
+}
+
+.total-value {
+    margin-top: 20px;
+    text-align: right;
+    font-size: 18px;
 }
