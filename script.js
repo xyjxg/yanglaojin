@@ -1,7 +1,7 @@
 document.getElementById('stockForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    const stockCode = document.getElementById('stockCode').value.toLowerCase(); // 股票代码转为小写
+    const stockCode = document.getElementById('stockCode').value; // 用户输入的股票代码
     const quantity = parseInt(document.getElementById('quantity').value);
 
     if (stockCode && quantity) {
@@ -28,14 +28,26 @@ function addStock(stockCode, quantity) {
 }
 
 function fetchStockPrice(stockCode) {
-    const url = `http://qt.gtimg.cn/q=${stockCode}`;
+    // 解析股票代码
+    let market, code;
+    if (stockCode.startsWith('6')) {
+        market = '1'; // 上海交易所
+        code = stockCode;
+    } else if (stockCode.startsWith('0') || stockCode.startsWith('3')) {
+        market = '0'; // 深圳交易所
+        code = stockCode;
+    } else {
+        console.error('不支持的股票代码格式');
+        return Promise.resolve(0);
+    }
+
+    const secid = `${market}.${code}`; // 格式化为东方财富的secid
+    const url = `https://push2.eastmoney.com/api/qt/stock/get?secid=${secid}&fields=f43`;
 
     return fetch(url)
-        .then(response => response.text())
+        .then(response => response.json())
         .then(data => {
-            // 解析返回的数据
-            const fields = data.split('~');
-            const price = parseFloat(fields[3]); // 当前价格在第4个字段
+            const price = data.data.f43 / 100; // 价格需要除以100
             return price || 0;
         })
         .catch(error => {
