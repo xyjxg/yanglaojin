@@ -3,34 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>养老金计划</title>
+    <title>股票持仓跟踪器</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- 上半部分：总市值显示 -->
+    <!-- 总市值显示区域 -->
     <div id="totalValueDisplay" class="total-value-display">￥0.00</div>
 
-    <!-- 下半部分：股票持仓跟踪器 -->
+    <!-- 添加股票表单 -->
     <div class="container">
-        <h1>养老金计划</h1>
-        <form id="stockForm">
-            <label for="stockCode">股票代码：</label>
-            <input type="text" id="stockCode" placeholder="例如：600873" required>
-            
-            <label for="quantity">持仓数量：</label>
-            <input type="number" id="quantity" placeholder="例如：1000" required>
-            
+        <h1>股票持仓跟踪器</h1>
+        <form id="stockForm" class="stock-form">
+            <div class="form-row">
+                <label for="stockCode">股票代码：</label>
+                <input type="text" id="stockCode" placeholder="例如：600873" required>
+            </div>
+            <div class="form-row">
+                <label for="quantity">持仓数量：</label>
+                <input type="number" id="quantity" placeholder="例如：1000" required>
+            </div>
             <button type="submit">添加股票</button>
         </form>
 
+        <!-- 持仓股票表格 -->
         <table id="stockTable">
             <thead>
                 <tr>
-                    <th>股票代码</th>
-                    <th>持仓数量</th>
-                    <th>当前价格</th>
-                    <th>持仓市值</th>
-                    <th>操作</th>
+                    <th colspan="3">持仓股票</th>
                 </tr>
             </thead>
             <tbody>
