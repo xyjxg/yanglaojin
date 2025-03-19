@@ -176,7 +176,7 @@ function startPriceUpdates() {
             });
         });
         updateTotalValue();
-    }, 60000); // 每60秒更新一次
+    }, 10000); // 每60秒更新一次
 }
 
 // 页面加载时加载持仓数据
