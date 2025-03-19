@@ -114,6 +114,11 @@ function updateTotalValue() {
     document.getElementById('totalValueDisplay').textContent = `￥${totalValue.toFixed(2)}`;
 }
 
+// 页面加载时加载持仓数据
+window.onload = function() {
+    loadPortfolio();
+};
+
 // 绑定表单提交事件
 document.getElementById('stockForm').addEventListener('submit', function(event) {
     event.preventDefault();
