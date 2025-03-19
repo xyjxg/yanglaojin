@@ -11,17 +11,16 @@ body {
 
 /* 总市值显示样式 */
 .total-value-display {
-    font-size: 140px; /* 非常大的字体 */
+    font-size: 140px;
     font-weight: bold;
-    color: #000000; /* 红色 */
+    color: #000000;
     padding: 40px;
-    margin-top: 80px;
     background-color: #f8f9fa;
     border-radius: 8px;
     width: 100%;
     text-align: center;
     box-sizing: border-box;
-    margin-bottom: 120px;
+    margin-bottom: 20px;
 }
 
 .container {
@@ -29,7 +28,8 @@ body {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    width: 400px;
+    width: 90%;
+    max-width: 1200px;
     text-align: center;
 }
 
@@ -38,25 +38,33 @@ h1 {
     margin-bottom: 20px;
 }
 
-form {
+/* 表单横向排列 */
+.stock-form {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 label {
-    margin-bottom: 5px;
     font-weight: bold;
 }
 
 input {
-    margin-bottom: 10px;
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
 button {
-    padding: 10px;
+    padding: 10px 20px;
     background-color: #28a745;
     color: #fff;
     border: none;
@@ -68,6 +76,7 @@ button:hover {
     background-color: #218838;
 }
 
+/* 持仓股票表格 */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -82,4 +91,19 @@ th, td {
 
 th {
     background-color: #f8f9fa;
+}
+
+/* 每行显示 3 个股票持仓 */
+.stock-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.stock-item {
+    flex: 1 1 calc(33.333% - 20px);
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
